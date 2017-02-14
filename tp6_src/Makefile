@@ -12,6 +12,7 @@ sources = \
 Makefile \
 squdpclient.c \
 squdpserv.c \
+sqtcpserv.c \
 sqserv.h \
 SqTCPServ.java
 
