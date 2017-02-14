@@ -96,10 +96,15 @@ int main(int argc, char* argv[]) {
         case ERANGE: err(EX_DATAERR, "out of range");
         default: if (ch == 0 && data == end) errx(EX_DATAERR, "no value");  // Linux returns 0 if no numerical value was given
     }
-
+    
     /* send data */
-    printf("integer value: %ld\n", ch);
-
+    printf("integer value: %ld, its square: %ld\n", ch, ch*ch);
+    char towrite[10];
+    sprintf(towrite, "%ld", ch*ch);
+    len = sendto(fd, towrite, 10, 0, (struct sockaddr *)&sin, sin_len);
+    if (len < 0) {
+        perror("sendto");
+    }
     /* cleanup */
     free(data);
     close(fd);

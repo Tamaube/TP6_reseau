@@ -68,6 +68,11 @@ int main(int argc, char* argv[]) {
     printf("sending to %s:%d\n", host, (int)port);
 
     /* create a socket, no bind needed, let the system choose */
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
 
     /* gethostbyname for information, getaddrinfo is prefered */
 #ifdef LEGACY
@@ -92,11 +97,20 @@ int main(int argc, char* argv[]) {
             default: errx(EX_NOHOST, "(getaddrinfo) unknown address family: %d", ai->ai_family);
         }
         printf("getaddrinfo:   resolved name '%s' to IP address %s\n", ai->ai_canonname, ipstr);
+        break;
     }
 #endif
 
     /* send data */
-
+    long int read;
+    int res = scanf("%ld", &read);
+    char tosend[res];
+    sprintf(tosend, "%ld", read);
+    ssize_t len = sendto(fd, tosend, res, 0, ai->ai_addr, ai->ai_addrlen);
+    
+    if(len < 0) {
+        perror("sendto");
+    }
     /* receive data */
 
     /* cleanup */
