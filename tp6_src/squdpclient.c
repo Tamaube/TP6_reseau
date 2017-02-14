@@ -90,14 +90,15 @@ int main(int argc, char* argv[]) {
     if ((error = getaddrinfo(host, service, &hints, &ai)) != 0) {
         errx(EX_NOHOST, "(getaddrinfo) cannot resolve %s: %s", host, gai_strerror(error));
     }
-    for(; ai != NULL; ai = ai->ai_next) {
+
+    struct addrinfo *tp = ai;
+    for(; tp != NULL; tp = tp->ai_next) {
         switch (ai->ai_family) {
-            case AF_INET:  inet_ntop(ai->ai_family, &(((struct sockaddr_in *)ai->ai_addr)->sin_addr), ipstr, sizeof(ipstr)); break;
-            case AF_INET6: inet_ntop(ai->ai_family, &(((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr), ipstr, sizeof(ipstr)); break;
-            default: errx(EX_NOHOST, "(getaddrinfo) unknown address family: %d", ai->ai_family);
+            case AF_INET:  inet_ntop(tp->ai_family, &(((struct sockaddr_in *)tp->ai_addr)->sin_addr), ipstr, sizeof(ipstr)); break;
+            case AF_INET6: inet_ntop(tp->ai_family, &(((struct sockaddr_in6 *)tp->ai_addr)->sin6_addr), ipstr, sizeof(ipstr)); break;
+            default: errx(EX_NOHOST, "(getaddrinfo) unknown address family: %d", tp->ai_family);
         }
-        printf("getaddrinfo:   resolved name '%s' to IP address %s\n", ai->ai_canonname, ipstr);
-        break;
+        printf("getaddrinfo:   resolved name '%s' to IP address %s\n", tp->ai_canonname, ipstr);
     }
 #endif
 
