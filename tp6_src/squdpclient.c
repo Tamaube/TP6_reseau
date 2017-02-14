@@ -112,8 +112,11 @@ int main(int argc, char* argv[]) {
         perror("sendto");
     }
     /* receive data */
-
+    char data[res];
+    len = recvfrom(fd, data, res*8, 0, ai->ai_addr, &ai->ai_addrlen);
+    printf("Receive %s\n", data);
     /* cleanup */
+    close(fd);
 
     return EX_OK;
 }

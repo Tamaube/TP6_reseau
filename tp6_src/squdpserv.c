@@ -99,9 +99,9 @@ int main(int argc, char* argv[]) {
     
     /* send data */
     printf("integer value: %ld, its square: %ld\n", ch, ch*ch);
-    char towrite[10];
+    char towrite[data_len];
     sprintf(towrite, "%ld", ch*ch);
-    len = sendto(fd, towrite, 10, 0, (struct sockaddr *)&sin, sin_len);
+    len = sendto(fd, towrite, data_len, 0, (struct sockaddr *)&sin, sin_len);
     if (len < 0) {
         perror("sendto");
     }
