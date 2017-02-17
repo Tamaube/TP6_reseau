@@ -123,10 +123,10 @@ int main(int argc, char* argv[]) {
     printf("integer value: %ld, its square: %ld\n", ch, ch*ch);
     char towrite[data_len];
     sprintf(towrite, "%ld", ch*ch);
-/*    len = sendto(fd, towrite, data_len, 0, (struct sockaddr *)&sin, sin_len);
+    len = write(fd, towrite, data_len);
     if (len < 0) {
         perror("sendto");
-    }*/
+    }
     /* cleanup */
     free(data);
     close(fd);
