@@ -13,6 +13,7 @@ Makefile \
 squdpclient.c \
 squdpserv.c \
 sqtcpserv.c \
+sqtcpservmulti.c \
 sqserv.h \
 SqTCPServ.java
 

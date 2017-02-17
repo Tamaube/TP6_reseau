@@ -89,67 +89,80 @@ int main(int argc, char* argv[]) {
     printf("listening on port %d\n", (int)port);
     
     fd_set read_fds;
-    fd_set write_fds;
-    
+    fd_set select_fds;
+
     FD_ZERO(&read_fds);
     FD_SET(fd, &read_fds);
-    FD_ZERO(&write_fds);
+
+    memcpy(&select_fds, &read_fds, sizeof(read_fds));
     max_fd = fd;
 
     printf("Entering select\n");
+    struct sockaddr_in *client = malloc(sizeof(struct sockaddr_in));
+    socklen_t *addrlen = malloc(sizeof(client));
+    int current_fd;
+    int i, j;
+    int modified_fd;
     while(1) {
         printf("Monitoring fds\n");
-        if (select(max_fd + 1, &read_fds, &write_fds, NULL, NULL) == -1) {
+        memcpy(&select_fds, &read_fds, sizeof(select_fds));
+        modified_fd = select(max_fd + 1, &select_fds, NULL, NULL, NULL);
+        if (modified_fd == -1) {
             perror("select");
             exit(EXIT_FAILURE);
         }
-        printf("passed select\n");
-        /* accept connection */
-        struct sockaddr *addr = malloc(sizeof(struct sockaddr));
-        socklen_t *addr_len = malloc(sizeof(socklen_t));
-        fd = accept(fd, addr, addr_len);
-        if (fd < 0) {
-            perror("accept");
-            exit(EXIT_FAILURE);
+        printf("Passed select\n");
+        printf("Nb modify: %d\n", modified_fd); 
+        for (i = 0, j = 0; i <= max_fd || j <= modified_fd; ++i, ++j) {
+            if(FD_ISSET(i, &select_fds)) {
+                if(i == fd) {
+                    /* accept connection */
+                    current_fd = accept(fd, (struct sockaddr *) client, addrlen);
+                    if (current_fd < 0) {
+                        perror("accept");
+                        exit(EXIT_FAILURE);
+                    }    
+                    FD_SET(current_fd, &read_fds);
+                    if (current_fd > max_fd) {
+                        max_fd = current_fd;
+                    }
+                    printf("New connection %s, file desc num: %d\n", inet_ntoa(client->sin_addr), current_fd);
+                } else {
+                    printf("reading data\n");
+                    /* receive data */
+                    len = recv(i, data, data_len, 0);
+                    if (len < 0) {
+                        FD_CLR(i, &read_fds);
+                        close(i);
+                        err(EX_SOFTWARE, "in recv");
+                    }
+
+                    ch = strtol(data, &end, 10);
+
+                    switch (errno) {
+                        case EINVAL: err(EX_DATAERR, "not an integer");
+                        case ERANGE: err(EX_DATAERR, "out of range");
+                        default: if (ch == 0 && data == end) errx(EX_DATAERR, "no value");  // Linux returns 0 if no numerical value was given
+                    }
+                    /* send data */
+                    printf("integer value: %ld, its square: %ld\n", ch, ch*ch);
+                    char towrite[data_len];
+                    sprintf(towrite, "%ld", ch*ch);
+                    /*len = sendto(fd, towrite, data_len, 0, (struct sockaddr *)&sin, sin_len);
+                    if (len < 0) {
+                        perror("sendto");
+                    }*/
+                }
+            }
         }
+        FD_ZERO(&select_fds);
+
+
+
         
-        if (addr == NULL || addr_len == NULL) {
-            printf("addr or addr_len is null\n");
-            exit(EXIT_FAILURE);
-        } else {
-        }
-        printf("Connection established\n");
-
-        /* receive data */
-        //len = recv(fd, data, data_len, 0);
-        len = read(fd, data, data_len);
-        if (len < 0) {
-            free(data);
-            close(fd);
-            err(EX_SOFTWARE, "in recv");
-        }
-
-        printf("got '%s' from IP address %s port %d\n", data, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
-
-        ch = strtol(data, &end, 10);
-
-        switch (errno) {
-            case EINVAL: err(EX_DATAERR, "not an integer");
-            case ERANGE: err(EX_DATAERR, "out of range");
-            default: if (ch == 0 && data == end) errx(EX_DATAERR, "no value");  // Linux returns 0 if no numerical value was given
-        }
-        
-        /* send data */
-        printf("integer value: %ld, its square: %ld\n", ch, ch*ch);
-        char towrite[data_len];
-        sprintf(towrite, "%ld", ch*ch);
-        /*len = sendto(fd, towrite, data_len, 0, (struct sockaddr *)&sin, sin_len);
-        if (len < 0) {
-            perror("sendto");
-        }*/
-        /* cleanup */
-        free(data);
-        close(fd);
     }
+    /* cleanup */
+    free(data);
+    close(fd);
     return EX_OK;
 }
