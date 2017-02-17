@@ -87,21 +87,26 @@ int main(int argc, char* argv[]) {
     /* accept connection */
     struct sockaddr *addr = malloc(sizeof(struct sockaddr));
     socklen_t *addr_len = malloc(sizeof(socklen_t));
-    res = accept(fd, addr, addr_len);
-    if (res < 0) {
+    fd = accept(fd, addr, addr_len);
+    if (fd < 0) {
         perror("accept");
         exit(EXIT_FAILURE);
     }
+    
     if (addr == NULL || addr_len == NULL) {
         printf("addr or addr_len is null\n");
         exit(EXIT_FAILURE);
+    } else {
     }
+    printf("Connection established\n");
+
     /* receive data */
-    len = recvfrom(fd, data, data_len, 0, addr, addr_len);
+    //len = recv(fd, data, data_len, 0);
+    len = read(fd, data, data_len);
     if (len < 0) {
         free(data);
         close(fd);
-        err(EX_SOFTWARE, "in recvfrom");
+        err(EX_SOFTWARE, "in recv");
     }
 
     printf("got '%s' from IP address %s port %d\n", data, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
